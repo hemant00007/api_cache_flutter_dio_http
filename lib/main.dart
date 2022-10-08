@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
@@ -82,20 +83,97 @@ class HomePage extends StatelessWidget {
           future: ApiService().getDioPost(),
           builder: (context, snapshot) {
             if(!snapshot.hasData) return CircularProgressIndicator();
-            final List posts = snapshot.data;
-            return ListView(
-              padding: const EdgeInsets.all(16.0),
-              children: <Widget>[
-                Text("This is a home page"),
-                ...posts.map((p)=>ListTile(
-                  title: Text(p['title']),
-                )),
-                ElevatedButton(
-                  onPressed: () {
-                    Hive.box(SETTINGS_BOX).put('welcome_shown',false);
-                  },
-                  child: Text("Clear"),
-                )
+            final List posts = snapshot.data['data'];
+            var seconddata = snapshot.data['support'];
+
+            return Column(
+              children: [
+                SizedBox(height: 10,),
+                Text("page is ${snapshot.data['page']}"),
+                Text("Per page${snapshot.data['per_page']}"),
+                Text("total ${snapshot.data['total']}"),
+                Text("Total pages ${snapshot.data['total_pages']}"),
+                Text("Text is ${seconddata['text']}"),
+                SizedBox(height: 30,),
+                Expanded(
+                  child: ListView.builder(
+                      itemCount: posts.length,
+                      itemBuilder: (context,index){
+                        return Container(
+                          width: double.infinity,
+                            height: 90,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5),
+
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 8.0,right: 8),
+                              child: Row(
+                                children: [
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(posts[index]['first_name']),
+                                      Text(posts[index]['last_name']),
+                                    ],
+                                  ),
+                                  Spacer(),
+                                  Container(
+                                    width: 60,
+                                    height: 60,
+                                    child: CachedNetworkImage(
+                                      imageUrl: posts[index]['avatar'].toString(),height: 50,
+                                      imageBuilder: (context, imageProvider) => Container(
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                            image: imageProvider,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+
+                                      placeholder: (context, url) =>
+                                      const CircularProgressIndicator(),
+                                      errorWidget: (context, url, error) => const Icon(Icons.error),
+                                    ),
+                                  ),
+
+                                ],
+                              ),
+                            ));
+                      }),
+                  // child: ListView(
+                  //   padding: const EdgeInsets.all(16.0),
+                  //   children: <Widget>[
+                  //     Text("This is a home page"),
+                  //     ...posts.map((p)=>ListTile(
+                  //       title: Text(p['email']),
+                  //       trailing:CachedNetworkImage(
+                  //         imageUrl: p['avatar'],height: 50,
+                  //         imageBuilder: (context, imageProvider) => Container(
+                  //           decoration: BoxDecoration(
+                  //             image: DecorationImage(
+                  //               image: imageProvider,
+                  //               fit: BoxFit.cover,
+                  //             ),
+                  //           ),
+                  //         ),
+                  //
+                  //         placeholder: (context, url) =>
+                  //         const CircularProgressIndicator(),
+                  //         errorWidget: (context, url, error) => const Icon(Icons.error),
+                  //       ),
+                  //         // leading:Image.network(p['avatar'],height: 100)
+                  //     )),
+                  //     ElevatedButton(
+                  //       onPressed: () {
+                  //         Hive.box(SETTINGS_BOX).put('welcome_shown',false);
+                  //       },
+                  //       child: Text("Clear"),
+                  //     )
+                  //   ],
+                  // ),
+                ),
               ],
             );
           }
@@ -119,8 +197,9 @@ class ApiService {
   // }
 
   Future getDioPost() async {
-    String url = 'https://jsonplaceholder.typicode.com/posts';
-    final posts = Hive.box(API_BOX).get('posts',defaultValue: []);
+    // String url = 'https://jsonplaceholder.typicode.com/posts';
+    String url = 'https://reqres.in/api/users?page=2';
+   final posts = Hive.box(API_BOX).get('posts',defaultValue: []);
     if(posts.isNotEmpty) return posts;
     try {
       dio.Response res = await client.get(url);
@@ -136,3 +215,4 @@ class ApiService {
 
   }
 }
+// up gari 0696 out krna hai
